@@ -4,8 +4,10 @@ import android.Manifest
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Toast
 import android.util.Size
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
@@ -27,21 +29,37 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
     }
 
     private lateinit var robot: Robot
-    private lateinit var previewView: PreviewView
+
+    // Camera preview view (matches @+id/viewFinder in activity_main.xml)
+    private lateinit var viewFinder: PreviewView
+
     private lateinit var cameraExecutor: ExecutorService
+
+    // Overlays
+    private lateinit var funnyText: TextView
+    private lateinit var bananaImage: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        previewView = findViewById(R.id.previewView)
-        previewView.implementationMode = PreviewView.ImplementationMode.PERFORMANCE
-        previewView.scaleType = PreviewView.ScaleType.FIT_CENTER
-        cameraExecutor = Executors.newSingleThreadExecutor()
+        // Bind views
+        viewFinder = findViewById(R.id.viewFinder)
+        funnyText = findViewById(R.id.funnyText)
+        bananaImage = findViewById(R.id.bananaImage)
 
+        // Preview configuration
+        viewFinder.implementationMode = PreviewView.ImplementationMode.PERFORMANCE
+        viewFinder.scaleType = PreviewView.ScaleType.FIT_CENTER
+
+        // Overlay content
+        funnyText.text = "Totally normal meeting,\nplease ignore the banana 🍌"
+        bananaImage.alpha = 0.9f
+
+        cameraExecutor = Executors.newSingleThreadExecutor()
         robot = Robot.getInstance()
 
-        // Camera permission + start camera
+        // Permissions + start camera
         if (allPermissionsGranted()) {
             startCamera()
         } else {
@@ -84,13 +102,13 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
 
         robot.speak(
             TtsRequest.create(
-                "Camera preview is running.",
+                "Camera preview with banana overlay is running.",
                 false
             )
         )
     }
 
-    // === Camera permission helpers ===
+    // === Permission helpers ===
     private fun allPermissionsGranted(): Boolean =
         REQUIRED_PERMISSIONS.all {
             ContextCompat.checkSelfPermission(baseContext, it) ==
@@ -122,11 +140,10 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
             val cameraProvider = cameraProviderFuture.get()
 
             val preview = Preview.Builder()
-                // Option A: tell CameraX “I like 16:9”
-                .setTargetResolution(Size(1280, 720))
+                .setTargetResolution(Size(1280, 720))   // deprecation is OK for now
                 .build()
                 .also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
+                    it.setSurfaceProvider(viewFinder.surfaceProvider)
                 }
 
             val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA

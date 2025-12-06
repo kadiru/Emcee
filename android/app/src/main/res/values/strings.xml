@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TemiHelloWorld</string>
+    <string name="banana_overlay">Silly banana overlay</string>
 </resources>
