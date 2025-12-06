@@ -1,0 +1,11 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Simple AppCompat theme -->
+    <style name="Theme.TemiHelloWorld" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- You can customize colors later; for now keep it minimal -->
+        <item name="colorPrimary">@android:color/holo_blue_light</item>
+        <item name="colorPrimaryDark">@android:color/holo_blue_dark</item>
+        <item name="colorAccent">@android:color/holo_orange_light</item>
+    </style>
+
+</resources>

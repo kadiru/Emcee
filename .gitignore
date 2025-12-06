@@ -1,0 +1,5 @@
+# Ignore IDE cruft at repo root (if it ever appears)
+.idea/
+*.iml
+
+# Delegate Android stuff to module-level .gitignore

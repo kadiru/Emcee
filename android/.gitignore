@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Android/IDE
+local.properties
+.idea/
+*.iml
+.cxx/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Kotlin/compile caches
+.kotlin/
+
+# Log / misc
+*.log
+captures/
+outputs/
+
+# APK / bundle outputs
+*.apk
+*.ap_
+*.aab
