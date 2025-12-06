@@ -72,5 +72,7 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$camerax_version")
     implementation("androidx.camera:camera-view:1.3.0")
 
+    implementation("org.nanohttpd:nanohttpd:2.3.1")
+
     implementation("com.robotemi:sdk:1.136.0")
 }
