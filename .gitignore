@@ -9,6 +9,15 @@ unity/EmceeXR/[Bb]uilds/
 unity/EmceeXR/[Uu]serSettings/
 unity/EmceeXR/[Mm]emoryCaptures/
 
+unityWin/EmceeXR/[Ll]ibrary/
+unityWin/EmceeXR/[Tt]emp/
+unityWin/EmceeXR/[Oo]bj/
+unityWin/EmceeXR/[Ll]ogs/
+unityWin/EmceeXR/[Bb]uild/
+unityWin/EmceeXR/[Bb]uilds/
+unityWin/EmceeXR/[Uu]serSettings/
+unityWin/EmceeXR/[Mm]emoryCaptures/
+
 # IDE
 .vs/
 .vscode/
