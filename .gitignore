@@ -18,6 +18,12 @@ unityWin/EmceeXR/[Bb]uilds/
 unityWin/EmceeXR/[Uu]serSettings/
 unityWin/EmceeXR/[Mm]emoryCaptures/
 
+# Agora SDK plugin (Windows Unity project)
+unityWin/EmceeXR/Assets/Agora-RTC-Plugin.meta
+unityWin/EmceeXR/Assets/Agora-RTC-Plugin/
+unityWin/EmceeXR/Assets/Agora-RTM-Plugin/
+
+
 # IDE
 .vs/
 .vscode/
