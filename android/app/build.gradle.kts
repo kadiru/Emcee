@@ -6,11 +6,11 @@ plugins {
 
 android {
     namespace = "com.example.temihelloworld"
-    compileSdk = 34      // nice, stable value that’s fine for Temi
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.temihelloworld"
-        minSdk = 23      // ✅ good for Temi
+        minSdk = 23
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -36,13 +36,12 @@ android {
         jvmTarget = "11"
     }
 
-    // You *can* keep Compose on even if you don't use it yet.
-    // If you’re not using Compose UI at all, you can delete this block.
+    // You can leave compose = true even if you’re not using it yet.
     buildFeatures {
         compose = true
+        // viewBinding = true  // optional, only if you want it
     }
 }
-
 
 dependencies {
     implementation(libs.androidx.core.ktx)
@@ -72,7 +71,9 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$camerax_version")
     implementation("androidx.camera:camera-view:1.3.0")
 
-    implementation("org.nanohttpd:nanohttpd:2.3.1")
+    // Pedro SG94 streaming libs (RTSP server + camera)
+    implementation("com.github.pedroSG94.rtmp-rtsp-stream-client-java:rtplibrary:2.2.6")
+    implementation("com.github.pedroSG94:RTSP-Server:1.1.8")
 
     implementation("com.robotemi:sdk:1.136.0")
 }

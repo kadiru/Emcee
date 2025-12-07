@@ -16,8 +16,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven(url = "https://jitpack.io")  // ⬅ add this line
     }
 }
 
-rootProject.name = "TemiHelloWorld"
+rootProject.name = "Emcee"
 include(":app")

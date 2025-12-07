@@ -1,74 +1,71 @@
 package com.example.temihelloworld
 
+import android.os.Handler
+import android.os.Looper
+import android.widget.TextView
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 import android.Manifest
-import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.ImageFormat
-import android.graphics.Matrix
-import android.graphics.Rect
-import android.graphics.YuvImage
 import android.os.Bundle
-import android.util.Size
+import android.view.SurfaceHolder
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.ImageProxy
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.pedro.rtsp.utils.ConnectCheckerRtsp
+import com.pedro.rtspserver.RtspServerCamera2
+import com.pedro.rtplibrary.view.OpenGlView
 import com.robotemi.sdk.Robot
 import com.robotemi.sdk.TtsRequest
 import com.robotemi.sdk.listeners.OnRobotReadyListener
-import fi.iki.elonen.NanoHTTPD
-import java.io.ByteArrayOutputStream
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.net.Inet4Address
+import java.net.NetworkInterface
+import java.util.Collections
 
-class MainActivity : AppCompatActivity(), OnRobotReadyListener {
+class MainActivity : AppCompatActivity(),
+    OnRobotReadyListener,
+    ConnectCheckerRtsp {
 
     companion object {
         private const val REQUEST_CODE_PERMISSIONS = 42
-        private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+        private val REQUIRED_PERMISSIONS = arrayOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        )
+
+        private const val SERVER_PORT = 8554
     }
 
+    private lateinit var serverTimeText: TextView
+    private val uiHandler = Handler(Looper.getMainLooper())
+    private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
+    private var timeUpdaterRunning = false
+
     private lateinit var robot: Robot
-    private lateinit var viewFinder: PreviewView
-    private lateinit var cameraExecutor: ExecutorService
-
-    @Volatile
-    private var latestJpeg: ByteArray? = null
-
-    private lateinit var httpServer: SimpleHttpServer
+    private lateinit var openGlView: OpenGlView
+    private lateinit var rtspServerCamera: RtspServerCamera2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        viewFinder = findViewById(R.id.viewFinder)
-        viewFinder.implementationMode = PreviewView.ImplementationMode.PERFORMANCE
-        viewFinder.scaleType = PreviewView.ScaleType.FIT_CENTER
-
-        cameraExecutor = Executors.newSingleThreadExecutor()
         robot = Robot.getInstance()
+        openGlView = findViewById(R.id.surfaceView)
+        serverTimeText = findViewById(R.id.serverTimeText)
+        startServerTimeUpdates()
+        openGlView.keepScreenOn = true
 
-        // Start small HTTP server on port 8080
-        httpServer = SimpleHttpServer(8080) { latestJpeg }
-        try {
-            httpServer.start()
-            Toast.makeText(this, "HTTP server running on port 8080", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(this, "Failed to start HTTP server", Toast.LENGTH_SHORT).show()
-        }
+        rtspServerCamera = RtspServerCamera2(
+            openGlView,
+            this,          // ConnectCheckerRtsp
+            SERVER_PORT    // e.g. 8554
+        )
 
-        // Camera permission + start camera
         if (allPermissionsGranted()) {
-            startCamera()
+            startStreamingSafe()
         } else {
             ActivityCompat.requestPermissions(
                 this,
@@ -76,6 +73,26 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
                 REQUEST_CODE_PERMISSIONS
             )
         }
+    }
+
+    private fun startServerTimeUpdates() {
+        if (timeUpdaterRunning) return
+        timeUpdaterRunning = true
+
+        uiHandler.post(object : Runnable {
+            override fun run() {
+                val now = Date()
+                serverTimeText.text = "Server: ${timeFormat.format(now)}"
+                if (timeUpdaterRunning) {
+                    uiHandler.postDelayed(this, 50L) // update ~20 fps
+                }
+            }
+        })
+    }
+
+    private fun stopServerTimeUpdates() {
+        timeUpdaterRunning = false
+        uiHandler.removeCallbacksAndMessages(null)
     }
 
     override fun onStart() {
@@ -90,8 +107,8 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        cameraExecutor.shutdown()
-        httpServer.stop()
+        stopServerTimeUpdates()
+        stopStreaming()
     }
 
     // === Temi SDK callback ===
@@ -99,7 +116,7 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
         if (!isReady) return
 
         try {
-            val activityInfo: ActivityInfo = packageManager.getActivityInfo(
+            val activityInfo = packageManager.getActivityInfo(
                 componentName,
                 PackageManager.GET_META_DATA
             )
@@ -108,15 +125,10 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
             e.printStackTrace()
         }
 
-        robot.speak(
-            TtsRequest.create(
-                "Camera streaming server is running.",
-                false
-            )
-        )
+        robot.speak(TtsRequest.create("RTSP streaming app ready.", false))
     }
 
-    // === Camera permission helpers ===
+    // === Permissions ===
     private fun allPermissionsGranted(): Boolean =
         REQUIRED_PERMISSIONS.all {
             ContextCompat.checkSelfPermission(baseContext, it) ==
@@ -132,195 +144,187 @@ class MainActivity : AppCompatActivity(), OnRobotReadyListener {
 
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                startCamera()
+                startStreamingSafe()
             } else {
-                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Camera + mic permission denied", Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
     }
 
-    // === CameraX setup ===
-    private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+    // === RTSP streaming control ===
+    /**
+     * Make sure the OpenGlView actually has a valid Surface
+     * before we start preview/stream to avoid EGL14 crash.
+     */
+    private fun startStreamingSafe() {
+        val holder = openGlView.holder
+        val surface = holder.surface
 
-        cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-
-            val preview = Preview.Builder()
-                .setTargetResolution(Size(1280, 720))
-                .build()
-                .also {
-                    it.setSurfaceProvider(viewFinder.surfaceProvider)
+        if (surface != null && surface.isValid) {
+            doStartStreaming()
+        } else {
+            holder.addCallback(object : SurfaceHolder.Callback {
+                override fun surfaceCreated(holder: SurfaceHolder) {
+                    openGlView.holder.removeCallback(this)
+                    doStartStreaming()
                 }
 
-            val imageAnalysis = ImageAnalysis.Builder()
-                .setTargetResolution(Size(640, 360)) // smaller -> less bandwidth
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-                .also { analysis ->
-                    analysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                        val jpeg = yuvToJpegWithRotation(imageProxy)
-                        if (jpeg != null) {
-                            latestJpeg = jpeg
-                        }
-                        imageProxy.close()
-                    }
+                override fun surfaceChanged(
+                    holder: SurfaceHolder,
+                    format: Int,
+                    width: Int,
+                    height: Int
+                ) {
+                    // no-op
                 }
 
-            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-
-            try {
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    this,
-                    cameraSelector,
-                    preview,
-                    imageAnalysis
-                )
-            } catch (exc: Exception) {
-                exc.printStackTrace()
-            }
-        }, ContextCompat.getMainExecutor(this))
-    }
-
-    // === YUV -> rotated JPEG helper ===
-    private fun yuvToJpegWithRotation(imageProxy: ImageProxy): ByteArray? {
-        if (imageProxy.format != ImageFormat.YUV_420_888) return null
-
-        val nv21 = yuv420888ToNv21(imageProxy)
-        val yuvImage = YuvImage(
-            nv21,
-            ImageFormat.NV21,
-            imageProxy.width,
-            imageProxy.height,
-            null
-        )
-
-        val out = ByteArrayOutputStream()
-        return try {
-            // First compress raw frame
-            yuvImage.compressToJpeg(
-                Rect(0, 0, imageProxy.width, imageProxy.height),
-                80,
-                out
-            )
-            val jpegBytes = out.toByteArray()
-
-            // Decode to bitmap, rotate according to sensor rotation
-            val bitmap = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.size)
-                ?: return jpegBytes
-
-            val rotation = imageProxy.imageInfo.rotationDegrees.toFloat()
-            val matrix = Matrix().apply {
-                // rotate to match what previewView shows
-                postRotate(rotation)
-                // If it still looks mirrored on Quest, we can also add:
-                // postScale(-1f, 1f, bitmap.width / 2f, bitmap.height / 2f)
-            }
-
-            val rotated = Bitmap.createBitmap(
-                bitmap,
-                0, 0,
-                bitmap.width,
-                bitmap.height,
-                matrix,
-                true
-            )
-
-            val out2 = ByteArrayOutputStream()
-            rotated.compress(Bitmap.CompressFormat.JPEG, 80, out2)
-            out2.toByteArray()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
+                override fun surfaceDestroyed(holder: SurfaceHolder) {
+                    // no-op
+                }
+            })
         }
     }
 
-    private fun yuv420888ToNv21(image: ImageProxy): ByteArray {
-        val yBuffer = image.planes[0].buffer
-        val uBuffer = image.planes[1].buffer
-        val vBuffer = image.planes[2].buffer
+    /**
+     * Actual streaming logic – only called when the surface is valid.
+     * Tuned for lower latency.
+     */
+    private fun doStartStreaming() {
+        if (rtspServerCamera.isStreaming) return
 
-        val ySize = yBuffer.remaining()
-        val uSize = uBuffer.remaining()
-        val vSize = vBuffer.remaining()
+        // ---------- TUNED ENCODER SETTINGS ----------
 
-        val nv21 = ByteArray(ySize + uSize + vSize)
+        // Video
+        val videoWidth = 640
+        val videoHeight = 360
+        val fps = 24                 // slightly lower load than 30
+        val videoBitrate = 1_200_000 // ~1.2 Mbps
+        val iFrameInterval = 1       // keyframe every 1 second
+        val rotation = 0             // adjust if your image is rotated
 
-        // Y
-        yBuffer.get(nv21, 0, ySize)
-        // V and U are swapped for NV21
-        vBuffer.get(nv21, ySize, vSize)
-        uBuffer.get(nv21, ySize + vSize, uSize)
+        // Audio (you can comment this whole block out if you want video-only)
+        val audioBitrate = 64 * 1024 // 64 kbps
+        val sampleRate = 32_000      // 32 kHz
+        val isStereo = false         // mono
+        val echoCanceler = true
+        val noiseSuppressor = true
 
-        return nv21
+        val preparedVideo = rtspServerCamera.prepareVideo(
+            videoWidth,
+            videoHeight,
+            fps,
+            videoBitrate,
+            iFrameInterval,
+            rotation
+        )
+
+        val preparedAudio = rtspServerCamera.prepareAudio(
+            audioBitrate,
+            sampleRate,
+            isStereo,
+            echoCanceler,
+            noiseSuppressor
+        )
+
+        // If you want VIDEO ONLY: change this to "val prepared = preparedVideo"
+        val prepared = preparedVideo && preparedAudio
+
+        if (!prepared) {
+            Toast.makeText(this, "Error preparing RTSP stream", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // Start camera preview on Temi
+        if (!rtspServerCamera.isOnPreview) {
+            rtspServerCamera.startPreview()
+        }
+
+        // Start RTSP stream
+        rtspServerCamera.startStream()
+
+        val ip = getDeviceIpAddress()
+        val endpoint = "rtsp://$ip:$SERVER_PORT/live"
+
+        Toast.makeText(this, "RTSP server: $endpoint", Toast.LENGTH_LONG).show()
+
+        robot.speak(
+            TtsRequest.create(
+                "Streaming started on port $SERVER_PORT.",
+                false
+            )
+        )
     }
-}
 
-/**
- * Very simple HTTP server:
- *   GET /         -> HTML page that JS-refreshes <img> every 100ms (smooth, no flicker)
- *   GET /snapshot -> latest JPEG frame
- */
-class SimpleHttpServer(
-    port: Int,
-    private val getLatestJpeg: () -> ByteArray?
-) : NanoHTTPD(port) {
+    private fun stopStreaming() {
+        try {
+            if (rtspServerCamera.isStreaming) {
+                rtspServerCamera.stopStream()
+            }
+            rtspServerCamera.stopPreview()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
-    override fun serve(session: IHTTPSession): Response {
-        return when (session.uri) {
-            "/snapshot" -> {
-                val jpeg = getLatestJpeg()
-                if (jpeg == null) {
-                    newFixedLengthResponse(
-                        Response.Status.SERVICE_UNAVAILABLE,
-                        "text/plain",
-                        "No frame yet"
-                    )
-                } else {
-                    val resp = newFixedLengthResponse(
-                        Response.Status.OK,
-                        "image/jpeg",
-                        jpeg.inputStream(),
-                        jpeg.size.toLong()
-                    )
-                    resp.addHeader("Cache-Control", "no-cache, no-store, must-revalidate")
-                    resp
+    /**
+     * Get the IPv4 address of the device on the local network
+     * (non-loopback). This avoids needing WifiManager permissions.
+     */
+    private fun getDeviceIpAddress(): String {
+        try {
+            val interfaces = Collections.list(NetworkInterface.getNetworkInterfaces())
+            for (intf in interfaces) {
+                val addrs = Collections.list(intf.inetAddresses)
+                for (addr in addrs) {
+                    if (!addr.isLoopbackAddress && addr is Inet4Address) {
+                        return addr.hostAddress ?: "0.0.0.0"
+                    }
                 }
             }
-            else -> {
-                val html = """
-                    <html>
-                    <head>
-                        <style>
-                            body {
-                                margin: 0;
-                                background: #000;
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-                                height: 100vh;
-                            }
-                            img {
-                                max-width: 100%;
-                                max-height: 100%;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <img id="stream" src="/snapshot" />
-                        <script>
-                            const img = document.getElementById('stream');
-                            setInterval(() => {
-                                img.src = '/snapshot?ts=' + Date.now();
-                            }, 100); // ~10 fps
-                        </script>
-                    </body>
-                    </html>
-                """.trimIndent()
-                newFixedLengthResponse(Response.Status.OK, "text/html", html)
-            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return "0.0.0.0"
+    }
+
+    // === ConnectCheckerRtsp callbacks ===
+    override fun onConnectionStartedRtsp(rtspUrl: String) {
+        // You can log rtspUrl if you want
+    }
+
+    override fun onConnectionSuccessRtsp() {
+        runOnUiThread {
+            Toast.makeText(this, "RTSP client connected", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onConnectionFailedRtsp(reason: String) {
+        runOnUiThread {
+            Toast.makeText(this, "RTSP connection failed: $reason", Toast.LENGTH_LONG).show()
+        }
+        rtspServerCamera.stopStream()
+    }
+
+    override fun onNewBitrateRtsp(bitrate: Long) {
+        // Optional: monitor bitrate
+    }
+
+    override fun onDisconnectRtsp() {
+        runOnUiThread {
+            Toast.makeText(this, "RTSP client disconnected", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onAuthErrorRtsp() {
+        runOnUiThread {
+            Toast.makeText(this, "RTSP auth error", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onAuthSuccessRtsp() {
+        runOnUiThread {
+            Toast.makeText(this, "RTSP auth success", Toast.LENGTH_SHORT).show()
         }
     }
 }
