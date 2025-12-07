@@ -1,5 +1,24 @@
-# Ignore IDE cruft at repo root (if it ever appears)
-.idea/
-*.iml
+# Unity project (under unity/EmceeXR)
 
-# Delegate Android stuff to module-level .gitignore
+unity/EmceeXR/[Ll]ibrary/
+unity/EmceeXR/[Tt]emp/
+unity/EmceeXR/[Oo]bj/
+unity/EmceeXR/[Ll]ogs/
+unity/EmceeXR/[Bb]uild/
+unity/EmceeXR/[Bb]uilds/
+unity/EmceeXR/[Uu]serSettings/
+unity/EmceeXR/[Mm]emoryCaptures/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.user
+*.userprefs
+
+# OS
+.DS_Store
+Thumbs.db
+
