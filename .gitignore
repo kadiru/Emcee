@@ -24,6 +24,13 @@ unityWin/EmceeXR/Assets/Agora-RTC-Plugin/
 unityWin/EmceeXR/Assets/Agora-RTM-Plugin/
 
 
+# Unity build output / backups
+*.apk
+*_BackUpThisFolder_ButDontShipItWithYourGame/
+
+# Unity temp
+unityWin/EmceeXR/.utmp/
+
 # IDE
 .vs/
 .vscode/
