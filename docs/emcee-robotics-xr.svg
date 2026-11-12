@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="500" viewBox="0 0 1120 500" role="img" aria-labelledby="title desc">
+  <title id="title">Emcee robotics and XR integration</title>
+  <desc id="desc">Video from the temi Android camera app reaches the Unity XR viewer via an external relay and Agora RTC. Unity reads Quest 3 controller input, sends the state as JSON through Agora, and a Python listener on the Reachy side logs incoming messages.</desc>
+  <rect width="1120" height="500" rx="22" fill="#101B2E"/>
+  <g font-family="Arial">
+    <text x="44" y="39" fill="#AFC7F8" font-size="14" font-weight="700" letter-spacing="2.4">EMCEE   /   SENSAI HACK 2025</text>
+    <text x="44" y="80" fill="#F6F8FF" font-size="36" font-weight="700">Robotics and XR integration</text>
+    <text x="44" y="109" fill="#CDD8EC" font-size="17">Two paths connect the operator to the robot prototype.</text>
+    <path d="M 44 132 H 1076" stroke="#374760"/>
+    <g>
+  <rect x="44" y="145" width="35" height="25" rx="7" fill="#263A61"/>
+  <text x="61.5" y="163" text-anchor="middle" fill="#B5CAFF" font-size="14" font-weight="700">01</text>
+  <text x="91" y="164" fill="#B5CAFF" font-size="16" font-weight="700" letter-spacing="1.2">ROBOT VIDEO</text>
+</g>
+    <g>
+  <rect x="44" y="179" width="276" height="95" rx="12" fill="#18263C" stroke="#456491" stroke-width="1.25"/>
+  <text x="61" y="208" fill="#F6F8FF" font-size="21" font-weight="700">temi camera app</text>
+  <text x="61" y="234" fill="#CDD8EC" font-size="16">Captures video and audio</text>
+  <text x="61" y="255" fill="#CDD8EC" font-size="16">Serves a local RTSP stream</text>
+</g>
+    <g>
+  <rect x="422" y="179" width="276" height="95" rx="12" fill="#18263C" stroke="#456491" stroke-width="1.25"/>
+  <text x="439" y="208" fill="#F6F8FF" font-size="21" font-weight="700">Agora RTC video</text>
+  <text x="439" y="234" fill="#CDD8EC" font-size="16">Carries the remote video</text>
+  <text x="439" y="255" fill="#CDD8EC" font-size="16">used by the XR viewer</text>
+</g>
+    <g>
+  <rect x="800" y="179" width="276" height="95" rx="12" fill="#18263C" stroke="#456491" stroke-width="1.25"/>
+  <text x="817" y="208" fill="#F6F8FF" font-size="21" font-weight="700">Unity XR view</text>
+  <text x="817" y="234" fill="#CDD8EC" font-size="16">Displays the camera feed</text>
+  <text x="817" y="255" fill="#CDD8EC" font-size="16">on a surface in the scene</text>
+</g>
+    <g>
+  <path d="M 329 226 H 334 M 339 226 H 344 M 349 226 H 354 M 359 226 H 364 M 369 226 H 374 M 379 226 H 384 M 389 226 H 394 M 399 226 H 404" fill="none" stroke="#B5CAFF" stroke-width="2.3"/>
+  <path d="M 407 221 L 414 226 L 407 231 Z" fill="#B5CAFF"/>
+  <text x="371.5" y="214" text-anchor="middle" fill="#B5CAFF" font-size="13">demo relay</text>
+</g>
+    <g>
+  <line x1="707" y1="226" x2="785" y2="226" stroke="#B5CAFF" stroke-width="2.3" />
+  <path d="M 785 221 L 792 226 L 785 231 Z" fill="#B5CAFF"/>
+  <text x="749.5" y="214" text-anchor="middle" fill="#B5CAFF" font-size="13">video</text>
+</g>
+    <g>
+  <rect x="44" y="292" width="35" height="25" rx="7" fill="#1C4242"/>
+  <text x="61.5" y="310" text-anchor="middle" fill="#80EACB" font-size="14" font-weight="700">02</text>
+  <text x="91" y="311" fill="#80EACB" font-size="16" font-weight="700" letter-spacing="1.2">OPERATOR INPUT</text>
+</g>
+    <g>
+  <rect x="44" y="326" width="276" height="95" rx="12" fill="#18263C" stroke="#397E75" stroke-width="1.25"/>
+  <text x="61" y="355" fill="#F6F8FF" font-size="21" font-weight="700">Quest 3 + Unity</text>
+  <text x="61" y="381" fill="#CDD8EC" font-size="16">Reads buttons, thumbstick</text>
+  <text x="61" y="402" fill="#CDD8EC" font-size="16">and controller rotation</text>
+</g>
+    <g>
+  <rect x="422" y="326" width="276" height="95" rx="12" fill="#18263C" stroke="#397E75" stroke-width="1.25"/>
+  <text x="439" y="355" fill="#F6F8FF" font-size="21" font-weight="700">Agora RTC data</text>
+  <text x="439" y="381" fill="#CDD8EC" font-size="16">Publishes controller state</text>
+  <text x="439" y="402" fill="#CDD8EC" font-size="16">as JSON messages</text>
+</g>
+    <g>
+  <rect x="800" y="326" width="276" height="95" rx="12" fill="#18263C" stroke="#397E75" stroke-width="1.25"/>
+  <text x="817" y="355" fill="#F6F8FF" font-size="21" font-weight="700">Python listener</text>
+  <text x="817" y="381" fill="#CDD8EC" font-size="16">Receives and logs messages</text>
+  <text x="817" y="402" fill="#CDD8EC" font-size="16">on the Reachy side</text>
+</g>
+    <g>
+  <line x1="329" y1="374" x2="407" y2="374" stroke="#80EACB" stroke-width="2.3" />
+  <path d="M 407 369 L 414 374 L 407 379 Z" fill="#80EACB"/>
+  <text x="371.5" y="362" text-anchor="middle" fill="#80EACB" font-size="13">state</text>
+</g>
+    <g>
+  <line x1="707" y1="374" x2="785" y2="374" stroke="#80EACB" stroke-width="2.3" />
+  <path d="M 785 369 L 792 374 L 785 379 Z" fill="#80EACB"/>
+  <text x="749.5" y="362" text-anchor="middle" fill="#80EACB" font-size="13">JSON</text>
+</g>
+    <path d="M 44 446 H 1076" stroke="#374760"/>
+    <path d="M 44 471 H 49 M 53 471 H 58 M 62 471 H 67" fill="none" stroke="#B5CAFF" stroke-width="2"/>
+    <text x="81" y="476" fill="#CDD8EC" font-size="15">Video relay is outside this repo. The Python receiver logs inputs without driving the robot.</text>
+  </g>
+</svg>
