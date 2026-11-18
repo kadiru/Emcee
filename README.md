@@ -1,35 +1,34 @@
-# Emcee — Reachy Reach
+# Emcee | Reachy Mini × temi
 
-**Robotics and XR integration · SensAI Hack 2025, San Francisco**
+Emcee is an XR-operated event host built at SensAI Hack 2025 in San Francisco. Reachy Mini sits on a mobile temi, bringing the expressive robot up to guests. The operator sees the room through temi’s camera and can watch their Quest 3 controller input travel back toward the robots.
 
-We prototyped an event host with two robots: a mobile temi to approach guests and a Reachy Mini to add expression. The idea was for a person in XR to see the room from the robot’s point of view and help guide how the pair interacted with guests.
+[Watch the robotics demo on Vimeo](https://vimeo.com/kadiru/demo-reachy-reach) · [See the team’s project on Devpost](https://devpost.com/software/700-sf11-vamos-drj9lt)
 
-[Watch the team demo and read the SensAI submission](https://devpost.com/software/700-sf11-vamos-drj9lt)
+## Follow the demo
 
-![Emcee integration: robot camera video into the Unity XR view, and Quest controller state through Agora to a Python listener.](docs/emcee-robotics-xr.svg)
-
-## What I built
-
-I worked on the robotics and XR integration. My focus was getting the operator a view of the robot’s surroundings and sending the operator’s input back out of the headset.
-
-| Piece | What it does | Code |
+| In the video | What to look for | Where to explore |
 | --- | --- | --- |
-| **temi camera app** | Previews the camera on temi and serves camera video and audio over RTSP. | [Android / Kotlin](android/app/src/main/java/com/example/temihelloworld/MainActivity.kt) |
-| **XR video view** | Receives a remote Agora video stream and renders it on a surface in the Unity scene. | [Unity / C#](unityWin/EmceeXR/Assets/AgoraTemiViewer.cs) |
-| **Quest 3 input bridge** | Reads the right controller’s buttons, thumbstick and rotation, then publishes the controller state as JSON on an Agora RTC data stream. | [Unity / OpenXR](unityWin/EmceeXR/Assets/AgoraTemiViewer.cs) |
-| **Reachy-side receiver** | Joins the Agora channel and logs incoming data messages so we could check that the controller input arrived. | [Python listener](pythonReachy/reachy_teleop_rtc.py) |
+| 0:25 · Mobile platform | Reachy Mini is mounted on temi beside the seated operator. | [Team prototype and hardware](https://devpost.com/software/700-sf11-vamos-drj9lt) |
+| 0:32 · Operator view | The headset shows the robot’s camera feed alongside sent and received controller values. | [Unity video and controller bridge](unityWin/EmceeXR/Assets/AgoraTemiViewer.cs) |
+| 1:02 · Guest interaction | Watch the combined robot interact with a participant. | [Robotics demo](https://vimeo.com/kadiru/demo-reachy-reach#t=1m02s) |
 
-### What the controller sends
+## How the operator and robots connect
 
-| Input | State in the message |
+![Two signal paths. The temi camera serves RTSP video to an external relay and the Unity XR viewer. Quest controller input travels through Agora to a Python listener.](docs/emcee-robotics-xr.svg)
+
+**Video to the operator.** The [Android app](android/app/src/main/java/com/example/temihelloworld/MainActivity.kt) previews temi’s camera and serves video and audio over RTSP. A relay outside this repository bridges the feed to Agora. The [Unity viewer](unityWin/EmceeXR/Assets/AgoraTemiViewer.cs) subscribes to the remote video track and displays it in the headset.
+
+**Input from the operator.** The same Unity script samples the right controller and sends JSON through an Agora data stream. Trigger reports teleoperation engagement, A and B report the temi and Reachy flags, and grip reports the playful-interaction flag. The message also carries thumbstick X/Y and controller pitch, roll, and yaw. The [Reachy-side listener](pythonReachy/reachy_teleop_rtc.py) logs incoming messages so the team can check delivery. Motor actuation is outside this listener’s scope.
+
+## Find your way around
+
+| To inspect | Start here |
 | --- | --- |
-| Trigger | Teleoperation engaged |
-| A / B | temi / Reachy flags |
-| Grip | Playful interaction flag (`funny_engaged`) |
-| Thumbstick and rotation | Stick X/Y and controller pitch, roll, and yaw |
+| Camera startup, permissions, and streaming on temi | [Kotlin activity](android/app/src/main/java/com/example/temihelloworld/MainActivity.kt) and [Android project](android/) |
+| The headset view or controller mappings | [Unity project used for the bridge](unityWin/EmceeXR/), [enabled scene](unityWin/EmceeXR/Assets/Scenes/SampleScene.unity), and [C# component](unityWin/EmceeXR/Assets/AgoraTemiViewer.cs) |
+| The receiving end of a controller message | [Python listener](pythonReachy/reachy_teleop_rtc.py) |
+| The full event-host concept and the team’s work on dialogue | [SensAI project submission](https://devpost.com/software/700-sf11-vamos-drj9lt) |
 
-## Prototype scope
+The Unity project above uses editor version 6000.3.0f1. The viewer and listener need access to the same Agora channel to exchange messages. The sender defaults to a target of 50 messages per second.
 
-The checked-in Android app serves RTSP; the Unity viewer subscribes to Agora RTC video. The relay between those two pieces is outside this repository. The Python receiver logs inputs and does not drive Reachy Mini’s motors. The [team submission](https://devpost.com/software/700-sf11-vamos-drj9lt) shows the larger event-host prototype and describes the team’s interaction and language model work.
-
-**Team:** Kadir Uyanik (robotics and XR), Varun Bhargava (language models and scripting ideas), and Ryota (XR, language models, and ideation).
+**Team.** Kadir Uyanik worked on robotics and XR integration, Varun Bhargava on language models and scripting ideas, and Ryota on XR, language models, and ideation.
