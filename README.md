@@ -1,12 +1,12 @@
 # Bring a small robot into the room.
 
-**Emcee** puts Reachy Mini on a mobile temi and connects the operator through a Quest 3 headset. Built at **SensAI Hack 2025 in San Francisco**, it explores an expressive, remotely operated event host that can meet guests at their level.
+**Emcee / Sidekick** puts Reachy Mini on a mobile temi and connects the operator through a Quest headset. Built at **SensAI Hack 2025 in San Francisco**, it explores an expressive, remotely operated event host that can meet guests at their level.
 
-[![The physical Reachy Mini demonstration](docs/showcase/reachy.jpg)](https://vimeo.com/kadiru/demo-reachy-reach)
+[![Reachy Mini riding on temi in the Emcee mobile-host prototype](docs/showcase/reachy.jpg)](https://vimeo.com/kadiru/demo-reachy-reach#t=26s)
 
-*Watch the physical prototype, then jump to 0:32 for the headset camera and controller view. This is a teleoperation prototype, not evidence of autonomous navigation.*
+*The demo starts at 0:26 with Reachy Mini riding on temi; the headset camera and controller view follows at 0:32. The film's opening standalone rocking experiment belongs to the separate Reachy Mini locomotion project. Emcee is a teleoperated mobile-host prototype.*
 
-[Watch the demo](https://vimeo.com/kadiru/demo-reachy-reach) · [Team project on Devpost](https://devpost.com/software/700-sf11-vamos-drj9lt)
+[Watch the mobile-host demo](https://vimeo.com/kadiru/demo-reachy-reach#t=26s) · [Team project on Devpost](https://devpost.com/software/700-sf11-vamos-drj9lt)
 
 <a name="follow-the-demo"></a>
 
