@@ -1,34 +1,42 @@
-# Emcee | Reachy Mini × temi
+# Bring a small robot into the room.
 
-Emcee is an XR-operated event host built at SensAI Hack 2025 in San Francisco. Reachy Mini sits on a mobile temi, bringing the expressive robot up to guests. The operator sees the room through temi’s camera and can watch their Quest 3 controller input travel back toward the robots.
+**Emcee** puts Reachy Mini on a mobile temi and connects the operator through a Quest 3 headset. Built at **SensAI Hack 2025 in San Francisco**, it explores an expressive, remotely operated event host that can meet guests at their level.
 
-[Watch the robotics demo on Vimeo](https://vimeo.com/kadiru/demo-reachy-reach) · [See the team’s project on Devpost](https://devpost.com/software/700-sf11-vamos-drj9lt)
+[![The physical Reachy Mini demonstration](docs/showcase/reachy.jpg)](https://vimeo.com/kadiru/demo-reachy-reach)
 
-## Follow the demo
+*Watch the physical prototype, then jump to 0:32 for the headset camera and controller view. This is a teleoperation prototype, not evidence of autonomous navigation.*
 
-| In the video | What to look for | Where to explore |
-| --- | --- | --- |
-| 0:25 · Mobile platform | Reachy Mini is mounted on temi beside the seated operator. | [Team prototype and hardware](https://devpost.com/software/700-sf11-vamos-drj9lt) |
-| 0:32 · Operator view | The headset shows the robot’s camera feed alongside sent and received controller values. | [Unity video and controller bridge](unityWin/EmceeXR/Assets/AgoraTemiViewer.cs) |
-| 1:02 · Guest interaction | Watch the combined robot interact with a participant. | [Robotics demo](https://vimeo.com/kadiru/demo-reachy-reach#t=1m02s) |
+[Watch the demo](https://vimeo.com/kadiru/demo-reachy-reach) · [Team project on Devpost](https://devpost.com/software/700-sf11-vamos-drj9lt)
 
-## How the operator and robots connect
+<a name="follow-the-demo"></a>
 
-![Two signal paths. The temi camera serves RTSP video to an external relay and the Unity XR viewer. Quest controller input travels through Agora to a Python listener.](docs/emcee-robotics-xr.svg)
+<a name="how-the-operator-and-robots-connect"></a>
 
-**Video to the operator.** The [Android app](android/app/src/main/java/com/example/temihelloworld/MainActivity.kt) previews temi’s camera and serves video and audio over RTSP. A relay outside this repository bridges the feed to Agora. The [Unity viewer](unityWin/EmceeXR/Assets/AgoraTemiViewer.cs) subscribes to the remote video track and displays it in the headset.
+## Two paths make the interaction possible
 
-**Input from the operator.** The same Unity script samples the right controller and sends JSON through an Agora data stream. Trigger reports teleoperation engagement, A and B report the temi and Reachy flags, and grip reports the playful-interaction flag. The message also carries thumbstick X/Y and controller pitch, roll, and yaw. The [Reachy-side listener](pythonReachy/reachy_teleop_rtc.py) logs incoming messages so the team can check delivery. Motor actuation is outside this listener’s scope.
+![temi camera to RTSP relay to Unity XR viewer; controller input through Agora to the Python listener](docs/emcee-robotics-xr.svg)
 
-## Find your way around
+**See the room.** The Android app previews temi's camera and serves RTSP video/audio. An external relay bridges the feed to Agora; the Unity viewer displays the remote video in the headset.
 
-| To inspect | Start here |
+**Send operator intent.** Unity samples the controller and sends engagement flags, thumbstick values and orientation as JSON through Agora. The Python listener logs received messages. The sender targets 50 messages per second; this is a configured rate, not a measured latency claim.
+
+This repository demonstrates the camera/controller bridge. The relay and motor-actuation path are outside the receiving listener's scope, so cloning it does not reproduce the whole live robot behavior.
+
+<a name="find-your-way-around"></a>
+
+## Follow the implementation
+
+| Component | Start here |
 | --- | --- |
-| Camera startup, permissions, and streaming on temi | [Kotlin activity](android/app/src/main/java/com/example/temihelloworld/MainActivity.kt) and [Android project](android/) |
-| The headset view or controller mappings | [Unity project used for the bridge](unityWin/EmceeXR/), [enabled scene](unityWin/EmceeXR/Assets/Scenes/SampleScene.unity), and [C# component](unityWin/EmceeXR/Assets/AgoraTemiViewer.cs) |
-| The receiving end of a controller message | [Python listener](pythonReachy/reachy_teleop_rtc.py) |
-| The full event-host concept and the team’s work on dialogue | [SensAI project submission](https://devpost.com/software/700-sf11-vamos-drj9lt) |
+| Camera permissions, preview and RTSP | [Android activity](android/app/src/main/java/com/example/temihelloworld/MainActivity.kt) |
+| Video display and controller mappings | [Unity C# bridge](unityWin/EmceeXR/Assets/AgoraTemiViewer.cs) |
+| Received controller packets | [Reachy-side Python listener](pythonReachy/reachy_teleop_rtc.py) |
+| Full prototype, timestamps and setup context | [Integration guide](docs/INTEGRATION_GUIDE.md) |
 
-The Unity project above uses editor version 6000.3.0f1. The viewer and listener need access to the same Agora channel to exchange messages. The sender defaults to a target of 50 messages per second.
+For a code review, trace a controller field from the Unity sender to the listener. A live exchange requires the same configured Agora channel and the documented external components. The Unity project uses editor **6000.3.0f1**.
 
-**Team.** Kadir Uyanik worked on robotics and XR integration, Varun Bhargava on language models and scripting ideas, and Ryota on XR, language models, and ideation.
+## Contribution and next step
+
+**Kadir Uyanik:** robotics and XR integration. **Varun Bhargava:** language models and scripting ideas. **Ryota:** XR, language models and ideation.
+
+The next reproducibility milestone is a documented end-to-end setup with the relay and robot-command adapter, followed by measured video/control latency and disconnect behavior. The existing code preserves the hackathon integration boundary rather than presenting those steps as completed.
