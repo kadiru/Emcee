@@ -2,7 +2,7 @@
 
 **Emcee / Sidekick** puts Reachy Mini on a mobile temi and connects the operator through a Quest headset. Built at **SensAI Hack 2025 in San Francisco**, it explores an expressive, remotely operated event host that can meet guests at their level.
 
-[![Reachy Mini riding on temi in the Emcee mobile-host prototype](docs/showcase/reachy.jpg)](https://vimeo.com/kadiru/demo-reachy-reach#t=26s)
+<a href="https://vimeo.com/kadiru/demo-reachy-reach#t=26s"><img src="docs/showcase/reachy.jpg" alt="Reachy Mini riding on temi in the Emcee mobile-host prototype" width="360"></a>
 
 *The demo starts at 0:26 with Reachy Mini riding on temi; the headset camera and controller view follows at 0:32. The film's opening standalone rocking experiment belongs to the separate Reachy Mini locomotion project. Emcee is a teleoperated mobile-host prototype.*
 
